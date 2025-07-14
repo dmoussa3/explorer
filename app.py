@@ -1,12 +1,12 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import plotly.express as px
-
+from io import BytesIO
 st.set_page_config(page_title="Data Analysis", layout="wide")
 st.title("Data Analysis Dashboard 📊")
 
 #0 Analysis Type Selection
+st.header("Select Analysis Type 🗂️")
 analysis_type = st.radio("Select the type of analysis", ("CSV File", "Excel File"))
 
 #1 File Upload
@@ -17,7 +17,7 @@ elif analysis_type == "Excel File":
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
-    st.write("Data Preview 🔍")
+    st.header("Data Preview 🔍")
     st.dataframe(df)
 
     #2 Show basic statistics
@@ -43,7 +43,7 @@ if uploaded_file is not None:
     st.dataframe(filtered_df)
 
     #4 Plotting
-    st.subheader("📊 Plot Columns")
+    st.subheader("Plot Columns 📊")
 
     numeric_cols = df.select_dtypes(include='number').columns.tolist()
     if numeric_cols:
@@ -56,6 +56,16 @@ if uploaded_file is not None:
 
     #5 Download filtered data
     st.header("Download Filtered Data 📥")
-    st.download_button("Download Filtered Data", filtered_df.to_csv(index=False), "filtered.csv", "text/csv")
-else:
-    st.info("Please upload a CSV file to begin.")
+    download_option = st.radio("Select download format", ("CSV", "Excel"))
+    if download_option == "CSV":
+        st.download_button("Download Filtered Data into CSV", filtered_df.to_csv(index=False), "filtered.csv", "text/csv")
+    elif download_option == "Excel":
+        # Convert DataFrame to Excel
+        excel_buffer = BytesIO()
+        with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+            filtered_df.to_excel(writer, index=False, sheet_name='Filtered Data')
+        excel_buffer.seek(0)
+
+        st.download_button("Download Filtered Data into Excel", excel_buffer, "filtered.xlsx", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    else:
+        st.info("Please upload a file to begin.")
