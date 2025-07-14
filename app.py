@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from io import BytesIO
+import plotly.express as px
+import seaborn as sns
+
+# Streamlit app for data analysis dashboard
 st.set_page_config(page_title="Data Analysis", layout="wide")
 st.title("Data Analysis Dashboard 📊")
 
@@ -20,7 +24,7 @@ if uploaded_file is not None:
     st.header("Data Preview 🔍")
     st.dataframe(df)
 
-    #2 Show basic statistics
+    #2 Show basic statistics about data
     if st.checkbox("Show Statistics summary"):
         st.write("Summary 📈")
         st.write(df.describe())
@@ -46,17 +50,50 @@ if uploaded_file is not None:
     st.subheader("Plot Columns 📊")
 
     numeric_cols = df.select_dtypes(include='number').columns.tolist()
-    if numeric_cols:
-        col_to_plot = st.selectbox("Select a numeric column to plot", numeric_cols)
+    all_cols = df.columns.tolist()
+    chart_type = st.selectbox("Select chart type", ["Line Chart", "Scatter Plot", "Histogram", "Box Plot", "Pie Chart", "Correlation Heatmap", "Bar Chart"])
+
+    if chart_type == "Histogram":
+        x_col = st.selectbox("Select column for histogram", numeric_cols)
+        fig = px.histogram(filtered_df, x=x_col, nbins=30)
+
+    elif chart_type == "Box Plot":
+        y_col = st.selectbox("Select numeric column", numeric_cols)
+        x_col = st.selectbox("Group by (categorical column)", filtered_df.select_dtypes(include='object').columns.tolist())
+        fig = px.box(filtered_df, x=x_col, y=y_col)
+
+    elif chart_type == "Scatter Plot":
+        x_col = st.selectbox("X-axis", numeric_cols)
+        y_col = st.selectbox("Y-axis", [col for col in numeric_cols if col != x_col])
+        fig = px.scatter(filtered_df, x=x_col, y=y_col)
+
+    elif chart_type == "Line Chart":
+        x_col = st.selectbox("X-axis (usually date/time or ID)", all_cols)
+        y_col = st.selectbox("Y-axis (numeric)", numeric_cols)
+        fig = px.line(filtered_df, x=x_col, y=y_col)
+
+    elif chart_type == "Bar Chart":
+        x_col = st.selectbox("X-axis (categorical)", filtered_df.select_dtypes(include='object').columns.tolist())
+        y_col = st.selectbox("Y-axis (numeric)", numeric_cols)
+        fig = px.bar(filtered_df, x=x_col, y=y_col)
+
+    elif chart_type == "Correlation Heatmap":
+        st.write("Correlation of Numeric Columns")
+        corr = filtered_df[numeric_cols].corr()
         fig, ax = plt.subplots()
-        filtered_df[col_to_plot].hist(bins=30, ax=ax)
+        sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax)
         st.pyplot(fig)
-    else:
-        st.warning("No numeric columns to plot.")
+        fig = None  # prevent double chart display
+
+    # Show chart (if not a heatmap)
+    if fig:
+        st.plotly_chart(fig, use_container_width=True)
+
 
     #5 Download filtered data
     st.header("Download Filtered Data 📥")
     download_option = st.radio("Select download format", ("CSV", "Excel"))
+
     if download_option == "CSV":
         st.download_button("Download Filtered Data into CSV", filtered_df.to_csv(index=False), "filtered.csv", "text/csv")
     elif download_option == "Excel":
