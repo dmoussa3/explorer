@@ -1,12 +1,19 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import plotly.express as px
 
 st.set_page_config(page_title="Data Analysis", layout="wide")
 st.title("Data Analysis Dashboard 📊")
 
+#0 Analysis Type Selection
+analysis_type = st.radio("Select the type of analysis", ("CSV File", "Excel File"))
+
 #1 File Upload
-uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+if analysis_type == "CSV File":
+    uploaded_file = st.file_uploader("Upload your CSV file", type=["csv"])
+elif analysis_type == "Excel File":
+    uploaded_file = st.file_uploader("Upload your Excel file", type=["xlsx"])
 
 if uploaded_file is not None:
     df = pd.read_csv(uploaded_file)
@@ -19,7 +26,7 @@ if uploaded_file is not None:
         st.write(df.describe())
 
     #3 Filtering
-    st.sidebar.header("Filter Options ⚙️")
+    st.header("Filter Options ⚙️")
 
     filtered_col = st.selectbox("Select column(s) to filter", df.columns)
     if df[filtered_col].dtype == 'object':
@@ -48,7 +55,7 @@ if uploaded_file is not None:
         st.warning("No numeric columns to plot.")
 
     #5 Download filtered data
-    st.sidebar.header("Download Filtered Data 📥")
+    st.header("Download Filtered Data 📥")
     st.download_button("Download Filtered Data", filtered_df.to_csv(index=False), "filtered.csv", "text/csv")
 else:
     st.info("Please upload a CSV file to begin.")
