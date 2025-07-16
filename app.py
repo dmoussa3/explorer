@@ -9,8 +9,8 @@ import seaborn as sns
 st.set_page_config(page_title="Data Analysis", layout="wide")
 st.title("Data Analysis Dashboard 📊")
 
-#0 Analysis Type Selection
-st.header("Select Analysis Type 🗂️")
+#0 Analysis File Type Selection
+st.header("Select Analysis File Type 🗂️")
 analysis_type = st.radio("Select the type of analysis", ("CSV File", "Excel File"))
 
 #1 File Upload
